@@ -1,4 +1,4 @@
-import java.util.*;
+ import java.util.*;
 
 public class CinemaBookingSystem {
 
@@ -18,9 +18,11 @@ public class CinemaBookingSystem {
         }
     }
 
-    // Display seat layout
+    // Display seat layout with seat count
     public static void displaySeats(HashMap<String, String> show) {
+        long availableCount = show.values().stream().filter(s -> s.equals("Available")).count();
         System.out.println("\n===== Seat Layout =====");
+        System.out.println("Available Seats: " + availableCount + "/" + show.size());
         for (char row = 'A'; row <= 'C'; row++) {
             for (int col = 1; col <= 5; col++) {
                 String seat = row + "" + col;
@@ -42,13 +44,19 @@ public class CinemaBookingSystem {
         }
     }
 
-    // ✅ PAYMENT (Cash removed)
+    // ✅ PAYMENT (fixed double-enter issue)
     public static String paymentOption(int totalAmount) {
         System.out.println("\n===== PAYMENT OPTIONS =====");
         System.out.println("1. UPI");
         System.out.println("2. Debit/Credit Card");
         System.out.print("Select Payment Method: ");
-        int option = sc.nextInt();
+
+        int option;
+        try {
+            option = Integer.parseInt(sc.nextLine().trim());
+        } catch (Exception e) {
+            option = 1;
+        }
 
         String method;
         switch (option) {
@@ -65,13 +73,13 @@ public class CinemaBookingSystem {
         return method;
     }
 
-    // Book multiple seats
+    // ✅ Book multiple seats (no double entry)
     public static void bookMultipleSeats(HashMap<String, String> show, String showName) {
+        // Show layout once
         displaySeats(show);
 
         System.out.print("\nEnter seats to book (Ex: A1 A2 B3): ");
-        sc.nextLine();
-        String input = sc.nextLine().toUpperCase();
+        String input = sc.nextLine().toUpperCase(); // ✅ only one line to read seats
 
         String[] seats = input.split(" ");
         int total = 0;
@@ -113,10 +121,10 @@ public class CinemaBookingSystem {
     }
 
     // Cancel booking
-    public static void cancelSeat(HashMap<String, String> show) {
+    public static void cancelSeat(HashMap<String, String> show, String showName) {
         displaySeats(show);
         System.out.print("\nEnter seat to cancel: ");
-        String seat = sc.next().toUpperCase();
+        String seat = sc.nextLine().toUpperCase();
 
         if (!show.containsKey(seat)) {
             System.out.println("❌ Invalid seat!");
@@ -129,7 +137,7 @@ public class CinemaBookingSystem {
         }
 
         show.put(seat, "Available");
-        System.out.println("✅ Booking canceled for " + seat);
+        System.out.println("✅ Booking canceled for " + seat + " in " + showName);
     }
 
     // Receipt
@@ -144,23 +152,31 @@ public class CinemaBookingSystem {
         System.out.println("==================================");
     }
 
-    // Select show
+    // Select show (enter number → show name printed)
     public static HashMap<String, String> chooseShow() {
         System.out.println("\nSelect Show:");
         System.out.println("1. Morning Show");
         System.out.println("2. Evening Show");
         System.out.println("3. Night Show");
-        System.out.print("Enter choice: ");
+        System.out.print("Enter choice (1-3): ");
+
         int ch = sc.nextInt();
+        sc.nextLine(); // clear buffer
+
+        String name = showName(ch);
+        System.out.println("✅ You selected: " + name);
 
         switch (ch) {
             case 1: return morningShow;
             case 2: return eveningShow;
             case 3: return nightShow;
-            default: return morningShow;
+            default:
+                System.out.println("❌ Invalid choice! Defaulting to Morning Show.");
+                return morningShow;
         }
     }
 
+    // Convert number to show name
     public static String showName(int c) {
         switch (c) {
             case 1: return "Morning Show";
@@ -187,6 +203,7 @@ public class CinemaBookingSystem {
             System.out.print("Choose: ");
 
             choice = sc.nextInt();
+            sc.nextLine(); // clear buffer
 
             switch (choice) {
                 case 1: {
@@ -199,18 +216,35 @@ public class CinemaBookingSystem {
                     System.out.println("1. Morning Show");
                     System.out.println("2. Evening Show");
                     System.out.println("3. Night Show");
+                    System.out.print("Enter choice (1-3): ");
                     int showChoice = sc.nextInt();
+                    sc.nextLine(); // clear buffer
+
+                    String name = showName(showChoice);
+                    System.out.println("✅ You selected: " + name);
 
                     HashMap<String, String> show =
                             (showChoice == 1) ? morningShow :
                             (showChoice == 2) ? eveningShow : nightShow;
 
-                    bookMultipleSeats(show, showName(showChoice));
+                    bookMultipleSeats(show, name);
                     break;
                 }
                 case 3: {
-                    HashMap<String, String> show = chooseShow();
-                    cancelSeat(show);
+                    System.out.println("\nSelect Show to Cancel:");
+                    System.out.println("1. Morning Show");
+                    System.out.println("2. Evening Show");
+                    System.out.println("3. Night Show");
+                    System.out.print("Enter choice : ");
+                    int showChoice = sc.nextInt();
+                    sc.nextLine(); // clear buffer
+
+                    String name = showName(showChoice);
+                    HashMap<String, String> show =
+                            (showChoice == 1) ? morningShow :
+                            (showChoice == 2) ? eveningShow : nightShow;
+
+                    cancelSeat(show, name);
                     break;
                 }
                 case 4:
@@ -222,3 +256,4 @@ public class CinemaBookingSystem {
         } while (choice != 4);
     }
 }
+
